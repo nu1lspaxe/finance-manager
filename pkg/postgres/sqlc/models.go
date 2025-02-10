@@ -166,7 +166,7 @@ type Record struct {
 type User struct {
 	ID          int64              `json:"id"`
 	Username    string             `json:"username"`
-	Email       pgtype.Text        `json:"email"`
+	Email       string             `json:"email"`
 	PhoneNumber pgtype.Numeric     `json:"phone_number"`
 	Password    pgtype.Text        `json:"password"`
 	CreatedTime pgtype.Timestamptz `json:"created_time"`

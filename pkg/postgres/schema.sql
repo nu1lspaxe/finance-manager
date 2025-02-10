@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS "User" (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(20) NOT NULL,
-    email VARCHAR(256) UNIQUE,
+    email VARCHAR(256) NOT NULL UNIQUE,
     phone_number NUMERIC(11,0),
     password VARCHAR(256),
     created_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),

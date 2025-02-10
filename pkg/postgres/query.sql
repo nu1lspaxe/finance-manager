@@ -1,8 +1,8 @@
 -- Table: User 
 
 -- name: CreateUser :one
-INSERT INTO "User" (username, email, phone_number, password)
-VALUES ($1, $2, $3, $4)
+INSERT INTO "User" (username, email)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: GetUserById :one

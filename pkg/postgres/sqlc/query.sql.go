@@ -123,26 +123,19 @@ func (q *Queries) CreateRecord(ctx context.Context, arg CreateRecordParams) (Rec
 
 const createUser = `-- name: CreateUser :one
 
-INSERT INTO "User" (username, email, phone_number, password)
-VALUES ($1, $2, $3, $4)
+INSERT INTO "User" (username, email)
+VALUES ($1, $2)
 RETURNING id, username, email, phone_number, password, created_time, updated_time
 `
 
 type CreateUserParams struct {
-	Username    string         `json:"username"`
-	Email       pgtype.Text    `json:"email"`
-	PhoneNumber pgtype.Numeric `json:"phone_number"`
-	Password    pgtype.Text    `json:"password"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 // Table: User
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.Username,
-		arg.Email,
-		arg.PhoneNumber,
-		arg.Password,
-	)
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Email)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -604,8 +597,8 @@ UPDATE "User" SET email = $2, updated_time = NOW() WHERE id = $1
 `
 
 type UpdateUserEmailParams struct {
-	ID    int64       `json:"id"`
-	Email pgtype.Text `json:"email"`
+	ID    int64  `json:"id"`
+	Email string `json:"email"`
 }
 
 func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) error {
