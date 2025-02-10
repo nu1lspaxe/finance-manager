@@ -10,7 +10,7 @@ services:
       - 5432
     volumes:
       - pg_0_data:/bitnami/postgresql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./pkg/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD:-postgres}
       - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME:-postgres}
@@ -62,17 +62,25 @@ services:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
     networks:
       - finance-manager-network
 
-  # fianace-manager:
-  #   image: ''
-  #   networks:
-  #     - finance-manager-network
+  finance-manager:
+    image: finance-manager:latest
+    container_name: finance-manager
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8989:8989"
+    depends_on:
+      - pgpool
+    environment:
+      - PG_URL=${PG_URL}
+    networks:
+      - finance-manager-network
 
 volumes:
   pg_0_data:
-    driver: local
   pg_1_data:
-    driver: local
