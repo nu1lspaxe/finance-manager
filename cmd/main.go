@@ -29,11 +29,12 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	router := v1.SetupRouter()
+	router := v1.SetupRouter(conn)
 
 	srv := &http.Server{
 		Addr:              ":8989",
 		Handler:           router,
+		WriteTimeout:      configs.TimeOutSeconds * time.Second,
 		ReadHeaderTimeout: configs.TimeOutSeconds * time.Second,
 	}
 

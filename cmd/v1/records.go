@@ -1,16 +1,14 @@
 package v1
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+
+	"finance_manager/pkg/records"
 )
 
-func addRecordRoute(rg *gin.RouterGroup) {
+func addRecordRoute(rg *gin.RouterGroup, controller *records.RecordController) {
 	recordGroup := rg.Group("/records")
 	{
-		recordGroup.POST("/", func(c *gin.Context) {
-			c.JSON(http.StatusCreated, gin.H{"message": "Record created"})
-		})
+		recordGroup.POST("/create", controller.CreateRecordHandler)
 	}
 }
