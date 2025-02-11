@@ -66,20 +66,20 @@ services:
     networks:
       - finance-manager-network
 
-  finance-manager:
-    image: finance-manager:latest
-    container_name: finance-manager
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8989:8989"
-    depends_on:
-      - pgpool
-    environment:
-      - PG_URL=${PG_URL}
-    networks:
-      - finance-manager-network
+  # finance-manager:
+  #   image: finance-manager:latest
+  #   container_name: finance-manager
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8989:8989"
+  #   depends_on:
+  #     - pgpool
+  #   environment:
+  #     - PG_URL=${PG_URL}
+  #   networks:
+  #     - finance-manager-network
 
 volumes:
   pg_0_data:

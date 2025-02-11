@@ -3,33 +3,34 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/joho/godotenv/autoload"
 
 	v1 "finance_manager/cmd/v1"
 	"finance_manager/configs"
+	"finance_manager/pkg/workers"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	conn, err := setupDBConnection(ctx)
+	pool, err := InitDB(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to PostgreSQL: %v\n", err)
 		<-ctx.Done()
 		return
 	}
-	defer conn.Close(ctx)
+	defer pool.Close()
 
-	router := v1.SetupRouter(conn)
+	router := v1.SetupRouter(pool)
 
 	srv := &http.Server{
 		Addr:              ":8989",
@@ -40,27 +41,40 @@ func main() {
 
 	go func() {
 		if err2 := srv.ListenAndServe(); err2 != nil && err2 != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err2)
+			fmt.Fprintf(os.Stderr, "Unable to start server: %v\n", err2)
 		}
 	}()
 
+	requests := make(chan *http.Request, configs.MaxWorkers)
+	var wg sync.WaitGroup
+
+	for range configs.MaxWorkers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			workers.Worker(ctx, requests, router)
+		}()
+	}
+
 	<-ctx.Done()
+	close(requests)
+	wg.Wait()
 
 	shutdown(ctx, srv)
 }
 
-func setupDBConnection(ctx context.Context) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(ctx, os.Getenv("PG_URL"))
+func InitDB(ctx context.Context) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(ctx, os.Getenv("PG_URL"))
 	if err != nil {
 		return nil, err
 	}
 
-	if connErr := conn.Ping(ctx); connErr != nil {
+	if connErr := pool.Ping(ctx); connErr != nil {
 		return nil, connErr
 	}
 
 	fmt.Fprintln(os.Stdout, "Successfully connected to PostgreSQL")
-	return conn, nil
+	return pool, nil
 }
 
 func shutdown(ctx context.Context, srv *http.Server) {
