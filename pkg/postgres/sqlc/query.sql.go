@@ -248,6 +248,64 @@ func (q *Queries) GetCreditCardById(ctx context.Context, id int64) (CreditCard, 
 	return i, err
 }
 
+const getMonthlyFinanceRecordByUserAndYear = `-- name: GetMonthlyFinanceRecordByUserAndYear :many
+SELECT
+    TO_CHAR(transaction_date, 'YYYY-MM') AS month,
+    record_type,
+    record_source,
+    SUM(amount) AS total_amount
+FROM
+    "Record"
+WHERE
+    user_id = $1
+    AND EXTRACT(YEAR FROM transaction_date) = $2
+GROUP BY
+    month,
+    record_type,
+    record_source
+ORDER BY
+    month DESC,
+    record_type,
+    record_source
+`
+
+type GetMonthlyFinanceRecordByUserAndYearParams struct {
+	UserID          int64       `json:"user_id"`
+	TransactionDate pgtype.Date `json:"transaction_date"`
+}
+
+type GetMonthlyFinanceRecordByUserAndYearRow struct {
+	Month        string           `json:"month"`
+	RecordType   EnumRecordType   `json:"record_type"`
+	RecordSource EnumRecordSource `json:"record_source"`
+	TotalAmount  int64            `json:"total_amount"`
+}
+
+func (q *Queries) GetMonthlyFinanceRecordByUserAndYear(ctx context.Context, arg GetMonthlyFinanceRecordByUserAndYearParams) ([]GetMonthlyFinanceRecordByUserAndYearRow, error) {
+	rows, err := q.db.Query(ctx, getMonthlyFinanceRecordByUserAndYear, arg.UserID, arg.TransactionDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMonthlyFinanceRecordByUserAndYearRow
+	for rows.Next() {
+		var i GetMonthlyFinanceRecordByUserAndYearRow
+		if err := rows.Scan(
+			&i.Month,
+			&i.RecordType,
+			&i.RecordSource,
+			&i.TotalAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRecordById = `-- name: GetRecordById :one
 SELECT id, user_id, amount, transaction_date, bank_account_id, credit_card_id, record_type, record_source, description, created_time, updated_time FROM "Record" WHERE id = $1
 `
@@ -420,6 +478,58 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
 		&i.UpdatedTime,
 	)
 	return i, err
+}
+
+const getYearlyFinanceRecordByUser = `-- name: GetYearlyFinanceRecordByUser :many
+SELECT
+    EXTRACT(YEAR FROM transaction_date) AS year,
+    record_type,
+    record_source,
+    SUM(amount) AS total_amount
+FROM
+    "Record"
+WHERE
+    user_id = $1
+GROUP BY
+    year,
+    record_type,
+    record_source
+ORDER BY
+    year DESC,
+    record_type,
+    record_source
+`
+
+type GetYearlyFinanceRecordByUserRow struct {
+	Year         pgtype.Numeric   `json:"year"`
+	RecordType   EnumRecordType   `json:"record_type"`
+	RecordSource EnumRecordSource `json:"record_source"`
+	TotalAmount  int64            `json:"total_amount"`
+}
+
+func (q *Queries) GetYearlyFinanceRecordByUser(ctx context.Context, userID int64) ([]GetYearlyFinanceRecordByUserRow, error) {
+	rows, err := q.db.Query(ctx, getYearlyFinanceRecordByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetYearlyFinanceRecordByUserRow
+	for rows.Next() {
+		var i GetYearlyFinanceRecordByUserRow
+		if err := rows.Scan(
+			&i.Year,
+			&i.RecordType,
+			&i.RecordSource,
+			&i.TotalAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listBankAccounts = `-- name: ListBankAccounts :many

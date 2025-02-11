@@ -98,3 +98,43 @@ WHERE bank_account_id = $1
 SELECT * FROM "Record"
 WHERE credit_card_id = $1
   AND transaction_date BETWEEN $2 AND $3;
+
+-- name: GetMonthlyFinanceRecordByUserAndYear :many
+SELECT
+    TO_CHAR(transaction_date, 'YYYY-MM') AS month,
+    record_type,
+    record_source,
+    SUM(amount) AS total_amount
+FROM
+    "Record"
+WHERE
+    user_id = sqlc.arg(user_id)
+    AND transaction_date >= sqlc.arg(start_date)
+    AND transaction_date < sqlc.arg(end_date)
+GROUP BY
+    month,
+    record_type,
+    record_source
+ORDER BY
+    month ASC,
+    record_type,
+    record_source;
+
+-- name: GetYearlyFinanceRecordByUser :many
+SELECT
+    EXTRACT(YEAR FROM transaction_date) AS year,
+    record_type,
+    record_source,
+    SUM(amount) AS total_amount
+FROM
+    "Record"
+WHERE
+    user_id = $1
+GROUP BY
+    year,
+    record_type,
+    record_source
+ORDER BY
+    year ASC,
+    record_type,
+    record_source;
