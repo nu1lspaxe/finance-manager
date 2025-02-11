@@ -23,6 +23,8 @@
 
 ## Check List
 
+> System Design : https://hackmd.io/@nu1lspaxe/finance-manager
+
 - [X] `/v1/users/signup`
 - [X] `/v1/records/create`
 
