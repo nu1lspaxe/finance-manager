@@ -44,6 +44,7 @@ func Logger() *logrus.Logger {
 
 func LoggerToFile() gin.HandlerFunc {
 	logger := Logger()
+
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		c.Next()
