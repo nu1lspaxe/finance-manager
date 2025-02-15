@@ -4,6 +4,8 @@ import (
 	"context"
 	"finance_manager/configs"
 	"finance_manager/pkg/postgres/sqlc"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type IUserService interface {
@@ -11,12 +13,14 @@ type IUserService interface {
 }
 
 type UserService struct {
+	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
-func NewUserService(queries *sqlc.Queries) IUserService {
+func NewUserService(pool *pgxpool.Pool) IUserService {
 	return &UserService{
-		queries: queries,
+		pool:    pool,
+		queries: sqlc.New(pool),
 	}
 }
 

@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	router := v1.SetupRouter(pool)
+	router := v1.InitializeRouter(pool)
 
 	srv := &http.Server{
 		Addr:              ":8989",

@@ -1,12 +1,10 @@
-package v1
+package records
 
 import (
 	"github.com/gin-gonic/gin"
-
-	"finance_manager/pkg/records"
 )
 
-func addRecordRoute(rg *gin.RouterGroup, controller *records.RecordController) {
+func RegisterRoutes(rg *gin.RouterGroup, controller *RecordController) {
 	recordGroup := rg.Group("/records")
 	{
 		recordGroup.POST("/create", controller.CreateRecordHandler)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"finance_manager/configs"
 	"finance_manager/pkg/postgres/sqlc"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type IRecordService interface {
@@ -11,12 +13,14 @@ type IRecordService interface {
 }
 
 type RecordService struct {
+	pool    *pgxpool.Pool
 	queries *sqlc.Queries
 }
 
-func NewRecordService(queries *sqlc.Queries) IRecordService {
+func NewRecordService(pool *pgxpool.Pool) IRecordService {
 	return &RecordService{
-		queries: queries,
+		pool:    pool,
+		queries: sqlc.New(pool),
 	}
 }
 
